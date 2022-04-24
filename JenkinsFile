@@ -1,0 +1,47 @@
+pipeline {
+    //The agent section specifies where the entire Pipeline, or a specific stage, 
+    //will execute in the Jenkins environment depending on where the agent section is placed.
+    agent any
+    
+    //The parameters directive provides a list of parameters that a user should provide when triggering the Pipeline.
+    
+    parameters {
+        string(name: 'SPEC', defaultValue: 'cypress/integration/*.spec.js', description: 'cypress/integration/*.spec.js')
+        choice(name: 'BROWSER', choices: ['chrome', 'edge', 'firefox'], description: 'Pick the web browser you want to use to run your scripts')
+    }
+    
+    
+    options {
+        ansiColor('xterm')
+    }
+
+    
+    stages {
+        
+        stage('Build'){
+            //The steps section defines a series of one or more steps to be executed in a given stage directive.
+            steps {
+                echo "Building the application"
+            }
+        }
+        
+        stage('Testing') {
+            steps {
+                bat "npm i" //install all dependency
+                bat "npx cypress run --browser ${BROWSER} --spec ${SPEC}"
+            }
+        }
+        
+        stage('Deploy'){
+            steps {
+                echo "Deploying"
+            }
+        }
+    }
+
+    post{ 
+        always{
+            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: 'cypress/report', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: ''])
+        }
+    }
+}
